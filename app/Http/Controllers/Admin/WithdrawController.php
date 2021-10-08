@@ -19,7 +19,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Berkayk\OneSignal\OneSignalClient;
 use OneSignal;
 use App\LogNotif;
-
+use App\Services\IrisService;
 class WithdrawController extends Controller
 {
     use TraitModel;
@@ -159,6 +159,8 @@ class WithdrawController extends Controller
         return response(null, Response::HTTP_NO_CONTENT);
     }
 
+    // approved
+
     public function approved($id)
     {
         abort_if(Gate::denies('withdraw_show'), Response::HTTP_FORBIDDEN, '403 Forbidden');
@@ -171,14 +173,94 @@ class WithdrawController extends Controller
         return view('admin.withdraw.approved', compact('withdraw','accounts'));
     }
 
+
+
+
     public function approvedprocess(Request $request)
     {
         abort_unless(\Gate::allows('withdraw_show'), 403);
-        if ($request->has('status')) {
-            //get
-            $withdraw = Withdraw::find($request->input('id'));
+        // dd($request->all());
+       
 
-            /* proceed ledger */
+        if ($request->has('status')) {
+
+            $data = array(
+                'bank' => $request->bank,
+                'account' => $request->account
+            );
+    
+            $iris = new IrisService();
+    
+            $res= $iris->validasiBank($data);
+    
+            if(isset($res->errors)){
+                return redirect()->back()->withErrors(['validasiBank' => 'Akun Bank tidak terdaftar']);
+            }
+
+            // $iris->createPayouts()
+
+            // //get
+            $withdraw = Withdraw::find($request->input('id'));
+            $customer = $withdraw->customers;
+            // dd($withdraw);
+            // $memo = $withdraw->memo.
+            $dataPayout = [
+                "payouts"=> [
+                    [
+                        "beneficiary_name"=> $customer->name,
+                        "beneficiary_account"=> $data['account'],
+                        "beneficiary_bank"=> $data['bank'],
+                        "beneficiary_email"=> $customer->email,
+                        "amount"=> (int)$withdraw->total,
+                        "notes"=>  str_replace('-', ' ', $withdraw->memo),
+                    ]
+                ]
+            ];
+
+            $resPayouts = $iris->createPayouts($dataPayout);
+
+            if(isset($resPayouts->errors)){
+                return redirect()->back()->withErrors(['validasiBank' => 'Permiintaan Gagal di Kerjakan']);
+            }
+
+            // if($resPayouts->payouts[0]->status)
+
+            if($resPayouts->payouts[0]->status =='queued'){
+                $reference_no =$resPayouts->payouts[0]->reference_no;
+                return view('admin.withdraw.otp', compact('reference_no', 'withdraw'));
+            }else{
+                return redirect()->back()->withErrors(['validasiBank' => 'Nomor Trasnsaksi tidak ditemukan']);
+            }
+
+        }
+        // return redirect()->route('admin.withdraw.index');
+
+    }
+
+    public function otpApproved(Request $request)
+    {
+
+        $request->validate([
+            'id' => 'required',
+            'reference_no' => 'required',
+            'OTP' => 'required',
+        ]); 
+        $withdraw = Withdraw::find($request->input('id'));
+        $data = array(
+            'reference_nos' => [$request->reference_no],
+            'otp' => $request->OTP
+        );
+
+        $iris = new IrisService();
+
+        $res = $iris->approved($data);
+
+        // dd($res);
+        if(isset($res->errors)){
+            return redirect()->back()->withErrors(['msg' => $res->error_message]);
+        }
+
+        if($res->status == 'ok'){
             $memo='Withdraw Poin'.$withdraw->customers->code."-".$withdraw->customers->name;
             $data = ['register' => $withdraw->register, 'title' => $memo, 'memo' => $memo];
             //return $data;
@@ -241,8 +323,8 @@ class WithdrawController extends Controller
                     $schedule = null
                 );
             }
+            return redirect()->route('admin.withdraw.index');
         }
-        return redirect()->route('admin.withdraw.index');
-
+           // /* proceed ledger */
     }
 }

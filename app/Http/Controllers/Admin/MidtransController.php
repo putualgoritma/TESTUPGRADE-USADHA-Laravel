@@ -27,6 +27,8 @@ class MidtransController extends Controller
 {
     public function approvedprocess($topup, $notification)
     {
+        try {
+            
             /* proceed ledger */
             $data = ['register' => $topup->register, 'title' => 'Topup Poin', 'memo' => 'Topup Poin'];
             //$data = array_merge($request->all(), ['total' => $total, 'type' => 'topup', 'status' => 'approved', 'ledgers_id' => $ledger_id, 'customers_id' => $customers_id, 'payment_type' => 'cash']);
@@ -91,6 +93,11 @@ class MidtransController extends Controller
                     $schedule = null
                 );
             }}
+
+            return 'sukses';
+        } catch (\Throwable $th) {
+            return $th;
+        }
     }
     public function notificationHandlerTopup(Request $request)
     {
@@ -134,12 +141,12 @@ class MidtransController extends Controller
                         return view('admin.notifmidtrans.unfinish');
                     }else {
                         // return view('admin.notifmidtrans.success');
-                        $this->approvedprocess($topup, $notification);
+                        $approved = $this->approvedprocess($topup, $notification);
                     }
                 }
             }
             else if ($status == 'settlement'){
-                $this->approvedprocess($topup, $notification);
+                $approved = $this->approvedprocess($topup, $notification);
             }
             else if ($status == 'pending'){
                 return view('admin.notifmidtrans.unfinish');
@@ -153,9 +160,12 @@ class MidtransController extends Controller
             else if ($status == 'cancel'){
                 return view('admin.notifmidtrans.unfinish');
             }
+
+            return $approved;
         } catch (\Throwable $th) {
             return response()->json([
-                'message' => $th
+                'message' => $th,
+                'funaproved' =>  $approved 
             ]);
         }
 
