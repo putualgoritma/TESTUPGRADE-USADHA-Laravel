@@ -81,11 +81,6 @@
                                         <input type="submit" class="btn btn-xs btn-danger" value="{{ trans('global.delete') }}">
                                     </form>
                                 @endcan
-                                @can('product_show')
-                                    <a class="btn btn-xs btn-success" href="{{ route('admin.order-product.index', ['product' => $product->id,'from' => '', 'to' => '']) }}">
-                                        Mutasi
-                                    </a>
-                                @endcan
                             </td>
 
                         </tr>

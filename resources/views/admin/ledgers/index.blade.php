@@ -15,44 +15,12 @@
     </div>
 
     <div class="card-body">
-    <form action="" id="filtersForm"> 
-                <div class="col-md-12">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                {{-- <label>Dari Tanggal</label> --}}
-                                <div class="input-group date">
-                                    <div class="input-group-addon">
-                                        <span class="glyphicon glyphicon-th"></span>
-                                    </div>
-                                    <input id="from" placeholder="masukkan tanggal Awal" type="date" class="form-control datepicker" name="from" value = "">
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                {{-- <label>Sampai Tanggal</label> --}}
-                                <div class="input-group date">
-                                    <div class="input-group-addon">
-                                        <span class="glyphicon glyphicon-th"></span>
-                                    </div>
-                                    <input id="to" placeholder="masukkan tanggal Akhir" type="date" class="form-control datepicker" name="to" value = "{{date('Y-m-d')}}">
-                                </div>
-                            </div>                                         
-                        </div>                        
-                    </div>
-                    <span class="input-group-btn">
-                        <input type="submit" class="btn btn-primary" value="Filter">
-                    </span>
-                </div>
-            </form>
         <div class="table-responsive">
-            <table class=" table table-bordered table-striped table-hover datatable ajaxTable datatable-ledger">
+            <table class=" table table-bordered table-striped table-hover datatable datatable-ledger">
                 <thead>
                     <tr>
                         <th width="10">
 
-                        </th>
-                        <th>
-                            No.
                         </th>
                         <th>
                             {{ trans('global.ledger.fields.id') }}
@@ -73,32 +41,71 @@
                             &nbsp;
                         </th>
                     </tr>
-                </thead>                
+                </thead>
+                <tbody>
+                    @foreach($ledgers as $key => $ledger)
+                        <tr data-entry-id="{{ $ledger->id }}">
+                            <td>
+
+                            </td>
+                            <td>
+                                {{ $ledger->id ?? '' }}
+                            </td>
+                            <td>
+                                {{ $ledger->customers_id ?? '' }}
+                            </td>
+                            <td>
+                                {{ $ledger->register ?? '' }}
+                            </td>
+                            <td>
+                                {{ $ledger->memo ?? '' }}
+                            </td>
+                            <td>
+                                <ul>
+                                @foreach($ledger->accounts as $key => $item)
+                                    <li>{{ $item->name }} Rp.{{ number_format($item->pivot->amount,2) }}({{ $item->pivot->entry_type }})</li>
+                                @endforeach
+                                </ul>
+                            </td>
+                            <td>
+                                @can('ledger_show')
+                                    <a class="btn btn-xs btn-primary" href="{{ route('admin.ledgers.show', $ledger->id) }}">
+                                        {{ trans('global.view') }}
+                                    </a>
+                                @endcan
+
+                                @can('ledger_edit')
+                                    <a class="btn btn-xs btn-info" href="{{ route('admin.ledgers.edit', $ledger->id) }}">
+                                        {{ trans('global.edit') }}
+                                    </a>
+                                @endcan
+
+                                @can('ledger_delete')
+                                    <form action="{{ route('admin.ledgers.destroy', $ledger->id) }}" method="POST" onsubmit="return confirm('{{ trans('global.areYouSure') }}');" style="display: inline-block;">
+                                        <input type="hidden" name="_method" value="DELETE">
+                                        <input type="hidden" name="_token" value="{{ csrf_token() }}">
+                                        <input type="submit" class="btn btn-xs btn-danger" value="{{ trans('global.delete') }}">
+                                    </form>
+                                @endcan
+
+                            </td>
+
+                        </tr>
+                    @endforeach
+                </tbody>
             </table>
         </div>
 
 
     </div>
 </div>
+@endsection
 @section('scripts')
 @parent
 <script>
     $(function () {
-    let searchParams = new URLSearchParams(window.location.search)
-    // date from unutk start tanggal 
-    let from = searchParams.get('from')
-    if (from) {
-        $("#from").val(from);
-    }
-
-    // date to untuk batas tanggal 
-    let to = searchParams.get('to')
-    if (to) {
-        $("#to").val(to);
-    }
-  
   let dtButtons = $.extend(true, [], $.fn.dataTable.defaults.buttons)
-@can('order_delete')
+@can('ledger_delete')
   let deleteButtonTrans = '{{ trans('global.datatables.delete') }}'
   let deleteButton = {
     text: deleteButtonTrans,
@@ -129,48 +136,15 @@
 @endcan
 
   $.extend(true, $.fn.dataTable.defaults, {
-    order: [[ 1, 'desc' ]],
+    ledger: [[ 1, 'desc' ]],
     pageLength: 100,
   });
   $('.datatable-ledger:not(.ajaxTable)').DataTable({ buttons: dtButtons })
-
-  let dtOverrideGlobals = {
-    processing: true,
-    serverSide: true,
-    retrieve: true,
-    aaSorting: [],
-    ajax: {
-      url: "{{ route('admin.ledgers.index') }}",
-      dataType: "json",
-      headers: {'x-csrf-token': _token},
-      method: 'GET',
-      data: {
-        'from' :   $("#from").val(),
-        'to' :  $("#to").val(),
-      }
-    },
-    columns: [
-        { data: 'placeholder', name: 'placeholder' },
-        { data: 'DT_RowIndex', name: 'no', searchable: false },
-        { data: 'id', name: 'id' },
-        { data: 'customers_id', name: 'customers_id', searchable: false  },
-        { data: 'register', name: 'register' },
-        { data: 'memo', name: 'memo' },
-        { data: 'account', name: 'account', searchable: false },
-        { data: 'actions', name: '{{ trans('global.actions') }}' }
-    ],
-    pageLength: 100,
-    "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
-  };
-
-  $('.datatable-ledger').DataTable(dtOverrideGlobals);
     $('a[data-toggle="tab"]').on('shown.bs.tab', function(e){
         $($.fn.dataTable.tables(true)).DataTable()
             .columns.adjust();
     });
-    
 })
 
 </script>
-@endsection
 @endsection

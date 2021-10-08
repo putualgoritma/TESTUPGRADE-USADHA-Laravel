@@ -21,23 +21,6 @@ trait TraitModel
 {
     private $fee_pairing_amount = 5;
 
-    public function get_ref_plat($id)
-    {
-        $customer = Customer::find($id);
-        $ref_id = $customer->ref_id;
-        if ($ref_id > 0) {
-            $referal = Customer::find($ref_id);
-            $ref_status = $referal->status;
-            if ($ref_status == 'active' && $referal->activation_type_id==4) {
-                return $ref_id;
-            }else{
-            return $this->get_ref_plat($ref_id);
-            }
-        } else {
-            return $id;
-        }
-    }
-
     public function get_fee_pairing_amount($id_order)
     {
         $fee_pairing_amount = OrderPoint::where('orders_id', '=', $id_order)

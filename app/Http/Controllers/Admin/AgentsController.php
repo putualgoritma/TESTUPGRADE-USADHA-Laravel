@@ -11,8 +11,6 @@ use App\Traits\TraitModel;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Yajra\DataTables\Facades\DataTables;
-use App\Order;
-use App\Ledger;
 
 class AgentsController extends Controller
 {
@@ -173,23 +171,7 @@ class AgentsController extends Controller
 
         //check if pending
         if ($agent->status == 'pending') {
-            $orders = Order::where('customers_id', $agent->id)
-                ->orWhere('customers_activation_id', $agent->id)
-                ->get();
-            foreach ($orders as $key => $order) {
-                if ($order->ledgers_id > 0) {
-                    $ledger = Ledger::find($order->ledgers_id);
-                    $ledger->accounts()->detach();
-                    $ledger->delete();
-                }
-                $order->products()->detach();
-                $order->productdetails()->detach();
-                $order->points()->detach();
-                $order->delete();
-            }
-            // $agent->delete();
-            $agent->status = 'closed';
-            $agent->save();
+            $agent->delete();
         } else {
             return back()->withError('Gagal Delete, Member Active!');
         }

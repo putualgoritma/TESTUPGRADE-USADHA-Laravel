@@ -619,7 +619,6 @@ class CustomersApiController extends Controller
             $ref2_row = Member::find($ref1_row->ref_id);
             $ref2_fee_point_sale = 0;
             $ref2_fee_point_upgrade = 0;
-            $member_get_flush_out = $ref2_row->id;
             if (!empty($ref2_row) && $ref2_row->ref_id > 0) {
                 $rsbv_g2 = (($ref_fee_row[0]->rsbv_g2) / 100) * $sbv;
                 $ref2_fee_point_sale = $rsbv_g2;
@@ -639,8 +638,7 @@ class CustomersApiController extends Controller
                     $bv_nett_max = $bv_total_max - $bvcv_max;
                     $sbv_max = (($ref2_fee_row[0]->sbv) / 100) * $bv_nett_max;
                     $ref2_fee_point_sale = (($ref2_fee_row[0]->rsbv_g2) / 100) * $sbv_max;
-                    // $ref1_flush_out = 0;
-                    $member_get_flush_out = $this->get_ref_plat($ref2_row->id);
+                    $ref1_flush_out = 0;
                 }
                 //if ref 2 user
                 if ($ref2_activation_row[0]->type == 'user' && ($ref2_activation_row[0]->bv_min < $package_activation_row[0]->bv_min)) {
@@ -650,8 +648,7 @@ class CustomersApiController extends Controller
                     $sbv_max = (($ref2_fee_row[0]->sbv) / 100) * $bv_nett_max;
                     $ref2_fee_point_sale = (($ref2_fee_row[0]->rsbv_g2) / 100) * $sbv_max;
                     $ref2_fee_point_upgrade = $rsbv_g2 - $ref2_fee_point_sale;
-                    // $ref1_flush_out = 0;
-                    $member_get_flush_out = $this->get_ref_plat($ref2_row->id);
+                    $ref1_flush_out = 0;
                 }
             }
 
@@ -753,7 +750,7 @@ class CustomersApiController extends Controller
             }
             //point flush out
             if ($ref1_flush_out > 0) {
-                $order->points()->attach($points_id, ['amount' => $ref1_flush_out, 'type' => 'D', 'status' => 'onhold', 'memo' => 'Poin Komisi (Flush Out) dari ' . $memo, 'customers_id' => $member_get_flush_out]);
+                $order->points()->attach($points_id, ['amount' => $ref1_flush_out, 'type' => 'D', 'status' => 'onhold', 'memo' => 'Poin Komisi (Flush Out) dari ' . $memo, 'customers_id' => $ref2_row->id]);
             }
 
             //push notif to agent
@@ -1000,7 +997,6 @@ class CustomersApiController extends Controller
                 $ref2_row = Member::find($ref1_row->ref_id);
                 $ref2_fee_point_sale = 0;
                 $ref2_fee_point_upgrade = 0;
-                $member_get_flush_out = $ref2_row->id;
                 if (!empty($ref2_row) && $ref2_row->ref_id > 0) {
                     $rsbv_g2 = (($ref_fee_row[0]->rsbv_g2) / 100) * $sbv;
                     $ref2_fee_point_sale = $rsbv_g2;
@@ -1020,8 +1016,7 @@ class CustomersApiController extends Controller
                         $bv_nett_max = $bv_total_max - $bvcv_max;
                         $sbv_max = (($ref2_fee_row[0]->sbv) / 100) * $bv_nett_max;
                         $ref2_fee_point_sale = (($ref2_fee_row[0]->rsbv_g2) / 100) * $sbv_max;
-                        // $ref1_flush_out = 0;
-                        $member_get_flush_out = $this->get_ref_plat($ref2_row->id);
+                        $ref1_flush_out = 0;
                     }
                     //if ref 2 user
                     if ($ref2_activation_row[0]->type == 'user' && ($ref2_activation_row[0]->bv_min < $package_activation_row[0]->bv_min)) {
@@ -1031,8 +1026,7 @@ class CustomersApiController extends Controller
                         $sbv_max = (($ref2_fee_row[0]->sbv) / 100) * $bv_nett_max;
                         $ref2_fee_point_sale = (($ref2_fee_row[0]->rsbv_g2) / 100) * $sbv_max;
                         $ref2_fee_point_upgrade = $rsbv_g2 - $ref2_fee_point_sale;
-                        // $ref1_flush_out = 0;
-                        $member_get_flush_out = $this->get_ref_plat($ref2_row->id);
+                        $ref1_flush_out = 0;
                     }
                 }
 
@@ -1134,7 +1128,7 @@ class CustomersApiController extends Controller
                 }
                 //point flush out
                 if ($ref1_flush_out > 0) {
-                    $order->points()->attach($points_id, ['amount' => $ref1_flush_out, 'type' => 'D', 'status' => 'onhold', 'memo' => 'Poin Komisi (Flush Out) dari ' . $memo, 'customers_id' => $member_get_flush_out]);
+                    $order->points()->attach($points_id, ['amount' => $ref1_flush_out, 'type' => 'D', 'status' => 'onhold', 'memo' => 'Poin Komisi (Flush Out) dari ' . $memo, 'customers_id' => $ref2_row->id]);
                 }
 
                 //push notif to agent
@@ -1318,7 +1312,6 @@ class CustomersApiController extends Controller
                 $ref2_row = Member::find($ref1_row->ref_id);
                 $ref2_fee_point_sale = 0;
                 $ref2_fee_point_upgrade = 0;
-                $member_get_flush_out = $ref2_row->id;
                 if (!empty($ref2_row) && $ref2_row->ref_id > 0) {
                     $rsbv_g2 = (($ref_fee_row[0]->rsbv_g2) / 100) * $sbv;
                     $ref2_fee_point_sale = $rsbv_g2;
@@ -1338,8 +1331,7 @@ class CustomersApiController extends Controller
                         $bv_nett_max = $bv_total_max - $bvcv_max;
                         $sbv_max = (($ref2_fee_row[0]->sbv) / 100) * $bv_nett_max;
                         $ref2_fee_point_sale = (($ref2_fee_row[0]->rsbv_g2) / 100) * $sbv_max;
-                        // $ref1_flush_out = 0;
-                        $member_get_flush_out = $this->get_ref_plat($ref2_row->id);
+                        $ref1_flush_out = 0;
                     }
                     //if ref 2 user
                     if ($ref2_activation_row[0]->type == 'user' && ($ref2_activation_row[0]->bv_min < $package_activation_row[0]->bv_min)) {
@@ -1349,8 +1341,7 @@ class CustomersApiController extends Controller
                         $sbv_max = (($ref2_fee_row[0]->sbv) / 100) * $bv_nett_max;
                         $ref2_fee_point_sale = (($ref2_fee_row[0]->rsbv_g2) / 100) * $sbv_max;
                         $ref2_fee_point_upgrade = $rsbv_g2 - $ref2_fee_point_sale;
-                        // $ref1_flush_out = 0;
-                        $member_get_flush_out = $this->get_ref_plat($ref2_row->id);
+                        $ref1_flush_out = 0;
                     }
                 }
 
@@ -1452,7 +1443,7 @@ class CustomersApiController extends Controller
                 }
                 //point flush out
                 if ($ref1_flush_out > 0) {
-                    $order->points()->attach($points_id, ['amount' => $ref1_flush_out, 'type' => 'D', 'status' => 'onhold', 'memo' => 'Poin Komisi (Flush Out) dari ' . $memo, 'customers_id' => $member_get_flush_out]);
+                    $order->points()->attach($points_id, ['amount' => $ref1_flush_out, 'type' => 'D', 'status' => 'onhold', 'memo' => 'Poin Komisi (Flush Out) dari ' . $memo, 'customers_id' => $ref2_row->id]);
                 }
 
                 //push notif to agent

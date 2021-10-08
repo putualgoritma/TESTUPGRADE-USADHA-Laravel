@@ -59,7 +59,7 @@
                         </td>
                         <td>
                         @can('account_show')
-                                    <a class="btn btn-xs btn-primary" href="{{ route('admin.acc-mutation', ['account' => $account->id,'from' => '', 'to' => '']) }}">
+                                    <a class="btn btn-xs btn-primary" href="{{ route('admin.accmutation', $account->id) }}">
                                     {{ trans('global.account.mutation') }}
                                     </a>
                                 @endcan
