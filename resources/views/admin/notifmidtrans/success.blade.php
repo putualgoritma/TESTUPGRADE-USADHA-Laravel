@@ -7,6 +7,8 @@
     <title>Document</title>
 </head>
 <body>
-    <h1>Transaksi Sukses</h1>
+<script>
+    window.ReactNativeWebView.postMessage("WINDOW_CLOSED")
+</script>
 </body>
 </html>
