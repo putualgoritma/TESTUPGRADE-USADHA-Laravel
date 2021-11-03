@@ -7,8 +7,8 @@ use Illuminate\Http\Request;
 use App\Services\IrisService;
 class IrisTestController extends Controller
 {
-    public $url =  'https://app.sandbox.midtrans.com/iris/api/v1/payouts';
-    public $key =  "IRIS-730d9ba3-f804-4419-a5d4-5fa6f1039fe3 : '' ";
+    public $url =  'https://app.midtrans.com/iris/api/v1/payouts';
+    public $key =  "IRIS-1a335c7a-49b7-4ee5-a0ca-05a65e9b393c : '' ";
 
     public function postIris($url, $key, $data)
     {

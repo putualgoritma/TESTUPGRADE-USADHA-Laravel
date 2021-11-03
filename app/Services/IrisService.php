@@ -1,9 +1,9 @@
 <?php
 namespace App\Services;
 class IrisService {
-    var $baseUrl = 'https://app.sandbox.midtrans.com/iris/';
-    var $key_approver = 'IRIS-dabe2962-7986-4810-ace2-35cbbc3248fd';
-    var $key_creator = 'IRIS-730d9ba3-f804-4419-a5d4-5fa6f1039fe3';
+    var $baseUrl = 'https://app.midtrans.com/iris/';//https://app.sandbox.midtrans.com/iris/
+    var $key_approver = 'IRIS-75cabe75-c847-4e3f-9a1d-9eee97796135';//IRIS-dabe2962-7986-4810-ace2-35cbbc3248fd
+    var $key_creator = 'IRIS-1a335c7a-49b7-4ee5-a0ca-05a65e9b393c';//IRIS-730d9ba3-f804-4419-a5d4-5fa6f1039fe3
     var $password = '';
 
     public function createPayouts($data=[])
@@ -30,7 +30,7 @@ class IrisService {
                // CURLOPT_USERPWD => "IRIS-dabe2962-7986-4810-ace2-35cbbc3248fd:null",
             ));
     
-            $key =  "IRIS-730d9ba3-f804-4419-a5d4-5fa6f1039fe3 : '' ";
+            $key =  "IRIS-1a335c7a-49b7-4ee5-a0ca-05a65e9b393c : '' ";
             curl_setopt($curl, CURLOPT_USERPWD,$this->key_creator.':'.$this->password); 
             $response = curl_exec($curl);
     
@@ -44,7 +44,7 @@ class IrisService {
     public function validasiBank($data=[])
     {
         $curl = curl_init();
-        $key =  "IRIS-730d9ba3-f804-4419-a5d4-5fa6f1039fe3 : '' ";
+        $key =  "IRIS-1a335c7a-49b7-4ee5-a0ca-05a65e9b393c : '' ";
         curl_setopt_array($curl, array(
             CURLOPT_URL => $this->baseUrl."api/v1/account_validation?bank=".$data['bank']."&account=".$data['account'],
             CURLOPT_RETURNTRANSFER => true,

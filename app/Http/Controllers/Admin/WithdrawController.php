@@ -194,7 +194,8 @@ class WithdrawController extends Controller
             $res= $iris->validasiBank($data);
     
             if(isset($res->errors)){
-                return redirect()->back()->withErrors(['validasiBank' => 'Akun Bank tidak terdaftar']);
+                //return redirect()->back()->withErrors(['validasiBank' => 'Akun Bank tidak terdaftar']);
+                return $res->errors;
             }
 
             // $iris->createPayouts()
