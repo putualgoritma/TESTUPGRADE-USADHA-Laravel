@@ -99,6 +99,7 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Admin', 'mi
     //test
     Route::get('test', 'TestController@test')->name('test.test');
     Route::get('sms-api', 'OrdersController@smsApi');
+    Route::get('net-tree', 'TestController@tree')->name('test.tree');
 
     // Sale Retur
     Route::delete('salereturs/destroy', 'SaleReturController@massDestroy')->name('salereturs.massDestroy');
@@ -151,7 +152,7 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Admin', 'mi
     Route::resource('order-product', 'OrderProductsController');
 
     //order package
-    Route::resource('order-package', 'OrderPackagesController');
+    Route::resource('order-package', 'OrderPackagesController');   
 
 });
 

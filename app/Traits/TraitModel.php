@@ -10,16 +10,36 @@ use App\Capital;
 use App\Customer;
 use App\NetworkFee;
 use App\Order;
+use App\OrderPoint;
 use App\Pairing;
 use App\Payreceivable;
 use App\PayreceivableTrs;
 use App\Production;
-use App\OrderPoint;
 use Illuminate\Database\QueryException;
 
 trait TraitModel
 {
     private $fee_pairing_amount = 5;
+
+    public function downline_tree($ref_id, $down_arr)
+    {
+        $bv_activation_amount_total = 0;
+        $customer = Customer::select('id', 'code', 'name')
+            ->where('id', $ref_id)
+            ->where('status', '=', 'active')
+            ->first();
+        $array_adj = array('id' => $customer->id, 'name' => $customer->name, 'code' => $customer->code);
+        array_push($down_arr, $array_adj);
+        $downref_list = Customer::select('id')
+            ->where('ref_id', $ref_id)
+            ->where('status', '=', 'active')
+            ->orderBy('activation_at', 'asc')
+            ->get();
+        foreach ($downref_list as $downline) {
+            $down_arr = $this->downline_tree($downline->id, $down_arr);
+        }
+        return $down_arr;
+    }
 
     public function get_ref_plat($id)
     {
@@ -28,10 +48,10 @@ trait TraitModel
         if ($ref_id > 0) {
             $referal = Customer::find($ref_id);
             $ref_status = $referal->status;
-            if ($ref_status == 'active' && $referal->activation_type_id==4) {
+            if ($ref_status == 'active' && $referal->activation_type_id == 4) {
                 return $ref_id;
-            }else{
-            return $this->get_ref_plat($ref_id);
+            } else {
+                return $this->get_ref_plat($ref_id);
             }
         } else {
             return $id;
@@ -41,8 +61,8 @@ trait TraitModel
     public function get_fee_pairing_amount($id_order)
     {
         $fee_pairing_amount = OrderPoint::where('orders_id', '=', $id_order)
-        ->where('status', '=', 'onhold')    
-        ->sum('amount');
+            ->where('status', '=', 'onhold')
+            ->sum('amount');
         return $fee_pairing_amount;
     }
 
@@ -118,6 +138,7 @@ trait TraitModel
         }
         $points_id = 1;
         $points_upg_id = 2;
+        $points_fee_id = 4;
         //BVPO
         $bvpo_row = NetworkFee::select('*')
             ->Where('code', '=', 'BVPO')
@@ -152,7 +173,7 @@ trait TraitModel
                         ->sum('ref1_amount');
                     if ($daily_amount_paired <= $nf_rf1_pairing_row[0]->fee_day_max) {
                         //$fee_out += $ref1_fee_pairing;
-                        //$order->points()->attach($points_id, ['amount' => $ref1_fee_pairing, 'type' => 'D', 'status' => 'onhold', 'memo' => 'Poin Komisi (Pairing) dari group ' . $memo, 'customers_id' => $ref1_row->id]);
+                        //$order->points()->attach($points_fee_id, ['amount' => $ref1_fee_pairing, 'type' => 'D', 'status' => 'onhold', 'memo' => 'Poin Komisi (Pairing) dari group ' . $memo, 'customers_id' => $ref1_row->id]);
                     } else {
                         //$ref1_amount = 0;
                     }
@@ -178,7 +199,7 @@ trait TraitModel
                             $fee_out += (float) $ref2_fee_pairing;
                             $this->fee_pairing_amount += (float) $ref2_fee_pairing;
                             //echo $fee_out."1. </br>";
-                            $order->points()->attach($points_id, ['amount' => $ref2_fee_pairing, 'type' => 'D', 'status' => 'onhold', 'memo' => 'Poin Komisi (Pairing) dari group ' . $memo, 'customers_id' => $ref2_row->id]);
+                            $order->points()->attach($points_fee_id, ['amount' => $ref2_fee_pairing, 'type' => 'D', 'status' => 'onhold', 'memo' => 'Poin Komisi (Pairing) dari group ' . $memo, 'customers_id' => $ref2_row->id]);
                         } else {
                             //$ref2_amount = 0;
                         }
@@ -198,7 +219,7 @@ trait TraitModel
                         $fee_out += (float) $ref3_fee_pairing;
                         $this->fee_pairing_amount += (float) $ref3_fee_pairing;
                         //echo $fee_out."2. </br>";
-                        $order->points()->attach($points_id, ['amount' => $ref3_fee_pairing, 'type' => 'D', 'status' => 'onhold', 'memo' => 'Poin Komisi (Matching) dari group ' . $memo, 'customers_id' => $ref3_row->id]);
+                        $order->points()->attach($points_fee_id, ['amount' => $ref3_fee_pairing, 'type' => 'D', 'status' => 'onhold', 'memo' => 'Poin Komisi (Matching) dari group ' . $memo, 'customers_id' => $ref3_row->id]);
                     }
                     //insert into tbl pairings
                     $register = date('Y-m-d H:i:s');
@@ -308,9 +329,11 @@ trait TraitModel
         return $bv_activation_amount_total;
     }
 
-    public function downref_omzet_view($ref_id, $activation_at, $lev)
+    public function downref_omzet_view($member_code, $activation_at, $lev)
     {
         $bv_activation_amount_total = 0;
+        $member_row = Customer::where('code', $member_code)->first();
+        $ref_id = $member_row->id;
         $downref_list = Customer::select('id', 'code', 'name', 'activation_type_id', 'activation_at')
             ->where('ref_id', $ref_id)
             ->where('status', '=', 'active')
@@ -326,7 +349,7 @@ trait TraitModel
             $bv_activation_amount_total += $balance;
             echo "</br>" . $this->space_generate($lev) . $downline->code . "-" . $downline->name . "-" . $downline->activations->name . "-" . $balance . "-" . $downline->activation_at;
             $lev_nxt = $lev + 1;
-            $bv_activation_amount_total += $this->downref_omzet_view($downline->id, $activation_at, $lev_nxt);
+            $bv_activation_amount_total += $this->downref_omzet_view($downline->code, $activation_at, $lev_nxt);
         }
         return $bv_activation_amount_total;
     }

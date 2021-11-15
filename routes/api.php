@@ -57,6 +57,7 @@ Route::group(['prefix' => 'close', 'namespace' => 'Api\V1\Admin', 'middleware' =
     Route::post('member-show', 'CustomersApiController@membershow');
     Route::post('transfer', 'TopupsApiController@transfer');
     Route::get('members', 'CustomersApiController@members');
+    Route::post('members-pagination', 'CustomersApiController@membersPagination');
     Route::post('order-agent', 'OrdersApiController@storeAgent');
     Route::post('/update-profile', 'CustomersApiController@updateprofile');
     Route::get('history-order/{id}', 'OrdersApiController@history');
@@ -78,9 +79,13 @@ Route::group(['prefix' => 'close', 'namespace' => 'Api\V1\Admin', 'middleware' =
     Route::get('logs-update-status/{id}', 'CustomersApiController@logsUpdate');
     Route::post('/upload-img/{id}', 'CustomersApiController@upImg');
     Route::get('test/{id}', 'OrdersApiController@test');
+    //tree
+    Route::get('member-tree', 'CustomersApiController@downlineTree');
     // Route::get('downline-test/{id}', 'CustomersApiController@downlineTest');
 
     Route::post('upgrade', 'CustomersApiController@upgrade');
     Route::get('/products-member-upgrade/{id}', 'ProductsApiController@indexMemberUpgrade');
     Route::post('/topup/map', 'TopupsApiController@topupMAP');
+
+    Route::get('province-city', 'OngkirApiController@provinceCity');
 });

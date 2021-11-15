@@ -95,6 +95,10 @@ class OrdersApiController extends Controller
             $order->points()->updateExistingPivot($points_id3, [
                 'status' => 'onhold',
             ]);
+            $points_id4 = 4;
+            $order->points()->updateExistingPivot($points_id4, [
+                'status' => 'onhold',
+            ]);
             //update pivot products details
             $ids = $order->productdetails()->allRelatedIds();
             foreach ($ids as $products_id) {
@@ -254,6 +258,7 @@ class OrdersApiController extends Controller
             $points_id = 1;
             $points_id2 = 2;
             $points_id3 = 3;
+            $points_id4 = 4;
             $memo = $order->memo;
             $total = $order->total;
             $order->points()->attach($points_id, ['amount' => $total, 'type' => 'C', 'status' => 'onhand', 'memo' => 'Balik Poin dari ' . $memo, 'customers_id' => $com_id]);
@@ -265,6 +270,9 @@ class OrdersApiController extends Controller
                 'status' => 'onhand',
             ]);
             $order->points()->updateExistingPivot($points_id3, [
+                'status' => 'onhand',
+            ]);
+            $order->points()->updateExistingPivot($points_id4, [
                 'status' => 'onhand',
             ]);
             //update pivot products details
@@ -584,6 +592,7 @@ class OrdersApiController extends Controller
         //get point member
         $points_id = 1;
         $points_saving_id = 3;
+        $points_fee_id = 4;
         $points_debit = OrderPoint::where('customers_id', '=', $request->customers_id)
             ->where('type', '=', 'D')
             ->where('status', '=', 'onhand')
@@ -724,7 +733,7 @@ class OrdersApiController extends Controller
 
             if ($package_type == 1) {
                 //set trf points from usadha to ref1
-                $order->points()->attach($points_id, ['amount' => $cba2, 'type' => 'D', 'status' => 'onhold', 'memo' => 'Penambahan Poin (Conventional Refferal) dari ' . $memo, 'customers_id' => $member->ref_id]);
+                $order->points()->attach($points_fee_id, ['amount' => $cba2, 'type' => 'D', 'status' => 'onhold', 'memo' => 'Penambahan Poin (Conventional Refferal) dari ' . $memo, 'customers_id' => $member->ref_id]);
                 //set trf points from usadha to member conv fee
                 $order->points()->attach($points_saving_id, ['amount' => $ref_fee_lev, 'type' => 'D', 'status' => 'onhold', 'memo' => 'Penambahan Poin Tabungan (Conventional Refferal) dari ' . $memo, 'customers_id' => $member->id]);
             } else {
@@ -732,7 +741,7 @@ class OrdersApiController extends Controller
                 $order->points()->attach($points_id, ['amount' => $cba2, 'type' => 'D', 'status' => 'onhold', 'memo' => 'Penambahan Poin (Cashback Agen 2) dari ' . $memo, 'customers_id' => $agents_id]);
                 //set level fee
                 foreach ($ref_arr as $key => $value) {
-                    $order->points()->attach($points_id, ['amount' => $lev_fee, 'type' => 'D', 'status' => 'onhold', 'memo' => 'Poin Komisi (Tingkat) dari ' . $memo, 'customers_id' => $value]);
+                    $order->points()->attach($points_fee_id, ['amount' => $lev_fee, 'type' => 'D', 'status' => 'onhold', 'memo' => 'Poin Komisi (Tingkat) dari ' . $memo, 'customers_id' => $value]);
                 }
             }
 

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1\Admin;
 
 use App\Activation;
+use App\City;
 use App\CustomerApi;
 use App\Http\Controllers\Controller;
 use App\Ledger;
@@ -16,6 +17,7 @@ use App\OrderDetails;
 use App\OrderPoint;
 use App\Package;
 use App\Product;
+use App\Province;
 use App\Traits\TraitModel;
 use Auth;
 use Berkayk\OneSignal\OneSignalClient;
@@ -26,8 +28,6 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use OneSignal;
 use Validator;
-use App\Province;
-use App\City;
 
 class CustomersApiController extends Controller
 {
@@ -177,6 +177,59 @@ class CustomersApiController extends Controller
         return response()->json([
             'success' => true,
             'data' => $members,
+        ]);
+    }
+
+    public function downlineTree(Request $request)
+    {
+        try {
+            $down_arr=array();
+            $data = $this->downline_tree($request->ref_id, $down_arr);
+            return response()->json([
+                'success' => true,
+                'data' => $data,
+            ]);
+        } catch (QueryException $exception) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data Kosong.',
+            ], 401);
+        }
+    }
+
+    public function membersPagination(Request $request)
+    {
+        try {
+            if (isset($request->page)) {
+                if (isset($request->filter) && $request->filter != '') {
+                    $members = CustomerApi::select('*')
+                        ->where('name', 'LIKE', '%' . $request->filter . '%')
+                        ->paginate($request->per_page, ['*'], 'page', $request->page);
+                } else {
+                    $members = CustomerApi::select('*')
+                        ->paginate($request->per_page, ['*'], 'page', $request->page);
+                }
+            } else {
+                if (isset($request->filter) && $request->filter != '') {
+                    $members = CustomerApi::select('*')
+                        ->where('name', 'LIKE', '%' . $request->filter . '%')
+                        ->get();
+                } else {
+                    $members = CustomerApi::select('*')
+                        ->get();
+                }
+            }
+        } catch (QueryException $exception) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data Kosong.',
+            ], 401);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $members,
+            'filter' => $request->filter,
         ]);
     }
 
@@ -344,7 +397,7 @@ class CustomersApiController extends Controller
             'lat' => 'required',
             'lng' => 'required',
             'province_id' => 'required',
-            'city_id' => 'required'
+            'city_id' => 'required',
         ]);
         if ($validator->fails()) {
             return response()->json([
@@ -364,8 +417,8 @@ class CustomersApiController extends Controller
         $member->address = $input['address'];
         $member->lat = $input['lat'];
         $member->lng = $input['lng'];
-        $member->province_id= $input['province_id'];
-        $member->city_id= $input['city_id'];
+        $member->province_id = $input['province_id'];
+        $member->city_id = $input['city_id'];
         try {
             $member->save();
         } catch (QueryException $exception) {
@@ -403,7 +456,7 @@ class CustomersApiController extends Controller
             'register' => 'required',
             'address' => 'required',
             'province_id' => 'required',
-            'city_id' => 'required'
+            'city_id' => 'required',
         ]);
         if ($validator->fails()) {
             return response()->json([
@@ -498,6 +551,7 @@ class CustomersApiController extends Controller
         //get point referal
         $points_id = 1;
         $points_upg_id = 2;
+        $points_fee_id = 4;
         $points_debit = OrderPoint::where('customers_id', '=', $request->ref_id)
             ->where('type', '=', 'D')
             ->sum('amount');
@@ -707,11 +761,11 @@ class CustomersApiController extends Controller
             $acc_profit = '71';
             $reserve_amount = $bv_nett - $cba1;
             $points_amount = $reserve_amount - $profit_com;
-            $profit_type='C';
-            if($profit_com<0){
+            $profit_type = 'C';
+            if ($profit_com < 0) {
                 $acc_profit = '70';
-                $profit_type='D';
-                $profit_com=$profit_com * -1;
+                $profit_type = 'D';
+                $profit_com = $profit_com * -1;
             }
             $accounts = array($acc_points, $acc_res_cashback, $acc_profit);
             $amounts = array($points_amount, $reserve_amount, $profit_com);
@@ -735,7 +789,7 @@ class CustomersApiController extends Controller
             //set ref1 fee
             //point sale
             if ($ref1_fee_point_sale > 0) {
-                $order->points()->attach($points_id, ['amount' => $ref1_fee_point_sale, 'type' => 'D', 'status' => 'onhold', 'memo' => 'Poin Komisi (Refferal) dari ' . $memo, 'customers_id' => $member->ref_id]);
+                $order->points()->attach($points_fee_id, ['amount' => $ref1_fee_point_sale, 'type' => 'D', 'status' => 'onhold', 'memo' => 'Poin Komisi (Refferal) dari ' . $memo, 'customers_id' => $member->ref_id]);
             }
             //point upgrade
             if ($ref1_fee_point_upgrade > 0) {
@@ -745,7 +799,7 @@ class CustomersApiController extends Controller
             //set ref2 fee
             //point sale
             if ($ref2_fee_point_sale > 0) {
-                $order->points()->attach($points_id, ['amount' => $ref2_fee_point_sale, 'type' => 'D', 'status' => 'onhold', 'memo' => 'Poin Komisi (Refferal) dari ' . $memo, 'customers_id' => $ref2_row->id]);
+                $order->points()->attach($points_fee_id, ['amount' => $ref2_fee_point_sale, 'type' => 'D', 'status' => 'onhold', 'memo' => 'Poin Komisi (Refferal) dari ' . $memo, 'customers_id' => $ref2_row->id]);
             }
             //point upgrade
             if ($ref2_fee_point_upgrade > 0) {
@@ -753,7 +807,7 @@ class CustomersApiController extends Controller
             }
             //point flush out
             if ($ref1_flush_out > 0) {
-                $order->points()->attach($points_id, ['amount' => $ref1_flush_out, 'type' => 'D', 'status' => 'onhold', 'memo' => 'Poin Komisi (Flush Out) dari ' . $memo, 'customers_id' => $member_get_flush_out]);
+                $order->points()->attach($points_fee_id, ['amount' => $ref1_flush_out, 'type' => 'D', 'status' => 'onhold', 'memo' => 'Poin Komisi (Flush Out) dari ' . $memo, 'customers_id' => $member_get_flush_out]);
             }
 
             //push notif to agent
@@ -811,7 +865,7 @@ class CustomersApiController extends Controller
             'register' => 'required',
             'address' => 'required',
             'province_id' => 'required',
-            'city_id' => 'required'
+            'city_id' => 'required',
         ]);
         if ($validator->fails()) {
             return response()->json([
@@ -870,6 +924,7 @@ class CustomersApiController extends Controller
             //get point member
             $points_id = 1;
             $points_upg_id = 2;
+            $points_fee_id = 4;
             $points_debit = OrderPoint::where('customers_id', '=', $request->input('id'))
                 ->where('type', '=', 'D')
                 ->where('status', '=', 'onhand')
@@ -1088,11 +1143,11 @@ class CustomersApiController extends Controller
                 $acc_profit = '71';
                 $reserve_amount = $bv_nett - $cba1;
                 $points_amount = $reserve_amount - $profit_com;
-                $profit_type='C';
-                if($profit_com<0){
+                $profit_type = 'C';
+                if ($profit_com < 0) {
                     $acc_profit = '70';
-                    $profit_type='D';
-                    $profit_com=$profit_com * -1;
+                    $profit_type = 'D';
+                    $profit_com = $profit_com * -1;
                 }
                 $accounts = array($acc_points, $acc_res_cashback, $acc_profit);
                 $amounts = array($points_amount, $reserve_amount, $profit_com);
@@ -1116,7 +1171,7 @@ class CustomersApiController extends Controller
                 //set ref1 fee
                 //point sale
                 if ($ref1_fee_point_sale > 0) {
-                    $order->points()->attach($points_id, ['amount' => $ref1_fee_point_sale, 'type' => 'D', 'status' => 'onhold', 'memo' => 'Poin Komisi (Refferal) dari ' . $memo, 'customers_id' => $member->ref_id]);
+                    $order->points()->attach($points_fee_id, ['amount' => $ref1_fee_point_sale, 'type' => 'D', 'status' => 'onhold', 'memo' => 'Poin Komisi (Refferal) dari ' . $memo, 'customers_id' => $member->ref_id]);
                 }
                 //point upgrade
                 if ($ref1_fee_point_upgrade > 0) {
@@ -1126,7 +1181,7 @@ class CustomersApiController extends Controller
                 //set ref2 fee
                 //point sale
                 if ($ref2_fee_point_sale > 0) {
-                    $order->points()->attach($points_id, ['amount' => $ref2_fee_point_sale, 'type' => 'D', 'status' => 'onhold', 'memo' => 'Poin Komisi (Refferal) dari ' . $memo, 'customers_id' => $ref2_row->id]);
+                    $order->points()->attach($points_fee_id, ['amount' => $ref2_fee_point_sale, 'type' => 'D', 'status' => 'onhold', 'memo' => 'Poin Komisi (Refferal) dari ' . $memo, 'customers_id' => $ref2_row->id]);
                 }
                 //point upgrade
                 if ($ref2_fee_point_upgrade > 0) {
@@ -1134,7 +1189,7 @@ class CustomersApiController extends Controller
                 }
                 //point flush out
                 if ($ref1_flush_out > 0) {
-                    $order->points()->attach($points_id, ['amount' => $ref1_flush_out, 'type' => 'D', 'status' => 'onhold', 'memo' => 'Poin Komisi (Flush Out) dari ' . $memo, 'customers_id' => $member_get_flush_out]);
+                    $order->points()->attach($points_fee_id, ['amount' => $ref1_flush_out, 'type' => 'D', 'status' => 'onhold', 'memo' => 'Poin Komisi (Flush Out) dari ' . $memo, 'customers_id' => $member_get_flush_out]);
                 }
 
                 //push notif to agent
@@ -1190,6 +1245,7 @@ class CustomersApiController extends Controller
             //get point member
             $points_id = 1;
             $points_upg_id = 2;
+            $points_fee_id = 4;
             $points_debit = OrderPoint::where('customers_id', '=', $request->input('id'))
                 ->where('type', '=', 'D')
                 ->where('status', '=', 'onhand')
@@ -1406,11 +1462,11 @@ class CustomersApiController extends Controller
                 $acc_profit = '71';
                 $reserve_amount = $bv_nett - $cba1;
                 $points_amount = $reserve_amount - $profit_com;
-                $profit_type='C';
-                if($profit_com<0){
+                $profit_type = 'C';
+                if ($profit_com < 0) {
                     $acc_profit = '70';
-                    $profit_type='D';
-                    $profit_com=$profit_com * -1;
+                    $profit_type = 'D';
+                    $profit_com = $profit_com * -1;
                 }
                 $accounts = array($acc_points, $acc_res_cashback, $acc_profit);
                 $amounts = array($points_amount, $reserve_amount, $profit_com);
@@ -1434,7 +1490,7 @@ class CustomersApiController extends Controller
                 //set ref1 fee
                 //point sale
                 if ($ref1_fee_point_sale > 0) {
-                    $order->points()->attach($points_id, ['amount' => $ref1_fee_point_sale, 'type' => 'D', 'status' => 'onhold', 'memo' => 'Poin Komisi (Refferal) dari ' . $memo, 'customers_id' => $member->ref_id]);
+                    $order->points()->attach($points_fee_id, ['amount' => $ref1_fee_point_sale, 'type' => 'D', 'status' => 'onhold', 'memo' => 'Poin Komisi (Refferal) dari ' . $memo, 'customers_id' => $member->ref_id]);
                 }
                 //point upgrade
                 if ($ref1_fee_point_upgrade > 0) {
@@ -1444,7 +1500,7 @@ class CustomersApiController extends Controller
                 //set ref2 fee
                 //point sale
                 if ($ref2_fee_point_sale > 0) {
-                    $order->points()->attach($points_id, ['amount' => $ref2_fee_point_sale, 'type' => 'D', 'status' => 'onhold', 'memo' => 'Poin Komisi (Refferal) dari ' . $memo, 'customers_id' => $ref2_row->id]);
+                    $order->points()->attach($points_fee_id, ['amount' => $ref2_fee_point_sale, 'type' => 'D', 'status' => 'onhold', 'memo' => 'Poin Komisi (Refferal) dari ' . $memo, 'customers_id' => $ref2_row->id]);
                 }
                 //point upgrade
                 if ($ref2_fee_point_upgrade > 0) {
@@ -1452,7 +1508,7 @@ class CustomersApiController extends Controller
                 }
                 //point flush out
                 if ($ref1_flush_out > 0) {
-                    $order->points()->attach($points_id, ['amount' => $ref1_flush_out, 'type' => 'D', 'status' => 'onhold', 'memo' => 'Poin Komisi (Flush Out) dari ' . $memo, 'customers_id' => $member_get_flush_out]);
+                    $order->points()->attach($points_fee_id, ['amount' => $ref1_flush_out, 'type' => 'D', 'status' => 'onhold', 'memo' => 'Poin Komisi (Flush Out) dari ' . $memo, 'customers_id' => $member_get_flush_out]);
                 }
 
                 //push notif to agent
@@ -1505,6 +1561,7 @@ class CustomersApiController extends Controller
             $member = Member::find($request->input('id'));
             //get point member
             $points_id = 1;
+            $points_fee_id = 4;
             $points_debit = OrderPoint::where('customers_id', '=', $request->input('id'))
                 ->where('type', '=', 'D')
                 ->sum('amount');
@@ -1647,6 +1704,7 @@ class CustomersApiController extends Controller
     {
         $agents = CustomerApi::select('*')
             ->where('type', 'agent')
+            ->where('status', 'active')
             ->get();
 
         return $agents;
@@ -1706,16 +1764,16 @@ class CustomersApiController extends Controller
             $city = City::all();
 
             return response()->json([
-                'code'=> 200,
+                'code' => 200,
                 'message' => 'success',
                 'province' => $province,
-                'city' => $city 
+                'city' => $city,
             ]);
         } catch (\Throwable $th) {
             return response()->json([
                 'code' => 404,
                 'message' => 'failed',
-                'data' => $th
+                'data' => $th,
             ]);
         }
     }

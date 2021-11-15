@@ -12,7 +12,12 @@ class TestController extends Controller
 
     public function test(Request $request)
     {
-        $dwn_arr = array();
-        return $this->get_ref_plat($request->id);
+        // $dwn_arr = array();
+        // return $this->get_ref_plat($request->id);
+    }
+
+    public function tree(Request $request)
+    {
+        return $this->downref_omzet_view($request->input('member_code'), $request->input('activation_at'), 1);
     }
 }
