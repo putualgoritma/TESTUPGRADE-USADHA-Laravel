@@ -54,6 +54,7 @@ Route::group(['prefix' => 'close', 'namespace' => 'Api\V1\Admin', 'middleware' =
     Route::get('balance/{id}', 'TopupsApiController@balance');
     Route::post('order', 'OrdersApiController@store');
     Route::get('history/{id}', 'TopupsApiController@history');
+    Route::get('history-fee/{id}', 'TopupsApiController@historyFee');
     Route::post('member-show', 'CustomersApiController@membershow');
     Route::post('transfer', 'TopupsApiController@transfer');
     Route::get('members', 'CustomersApiController@members');

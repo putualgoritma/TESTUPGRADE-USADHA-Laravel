@@ -16,6 +16,7 @@ use OneSignal;
 use App\LogNotif;
 use Midtrans\Config;
 use Midtrans\Snap;
+use App\Account;
 
 class TopupsApiController extends Controller
 {
@@ -285,6 +286,49 @@ class TopupsApiController extends Controller
         }
     }
 
+    public function historyFee($id)
+    {
+        //debit
+        $points_debit = OrderPoint::where('customers_id', '=', $id)
+            ->where('type', '=', 'D')
+            ->where('status', '=', 'onhand')
+            ->where('memo', 'LIKE', '%komisi%')
+            ->sum('amount');
+        //credit
+        $points_credit = OrderPoint::where('customers_id', '=', $id)
+            ->where('type', '=', 'C')
+            ->where('status', '=', 'onhand')
+            ->where('memo', 'LIKE', '%komisi%')
+            ->sum('amount');
+        $points_balance = $points_debit - $points_credit;
+        //list
+        $orderpoint = OrderPoint::with('orders')
+            ->where('customers_id', $id)
+            ->where('status', 'onhand')
+            ->where('memo', 'LIKE', '%komisi%')
+            ->orderBy('id','DESC')
+            ->get();
+
+        //Check if history found or not.
+        if (is_null($orderpoint)) {
+            $message = 'History not found.';
+            $status = false;
+            return response()->json([
+                'status' => $status,
+                'message' => $message,
+            ]);
+        } else {
+            $message = 'History retrieved successfully.';
+            $status = true;
+            return response()->json([
+                'status' => $status,
+                'message' => $message,
+                'data' => $orderpoint,
+                'total' => $points_balance,
+            ]);
+        }
+    }
+
     public function history($id)
     {
         $orderpoint = OrderPoint::with('orders')
@@ -335,9 +379,15 @@ class TopupsApiController extends Controller
         $code = acc_code_generate($last_code, 8, 3);
         $member = Customer::find($customers_id);
         $memo="Topup Poin ".$member->code."-".$member->name;
+
+        //set acc pay
+        $accounts = Account::select('id')
+            ->where('code', '10006')
+            ->first();
+
         //set topup
         $register=date("Y-m-d");
-        $data = array_merge($request->all(), ['code' => $code, 'total' => $total, 'type' => 'topup', 'status' => 'pending', 'ledgers_id' => 0, 'customers_id' => $customers_id, 'payment_type' => 'cash', 'register' => $register, 'memo' => $memo, 'acc_pay' => $request->input('accounts_id')]);
+        $data = array_merge($request->all(), ['code' => $code, 'total' => $total, 'type' => 'topup', 'status' => 'pending', 'ledgers_id' => 0, 'customers_id' => $customers_id, 'payment_type' => 'cash', 'register' => $register, 'memo' => $memo, 'acc_pay' => $accounts->id]);
         $topup = Topup::create($data);
         //set topup points
 

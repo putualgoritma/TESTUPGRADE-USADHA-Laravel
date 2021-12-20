@@ -247,6 +247,12 @@ class OrdersApiController extends Controller
     {
         /*update order status */
         $order = Order::find($id);
+        //check if activation member
+        if($order->type=='activation_member'){
+            $activation_member = Customer::find($order->customers_activation_id);
+            $activation_member->status = 'active';
+            $activation_member->save();
+        }
         if ($order->status == 'approved' && $order->status_delivery == 'delivered') {
             $order->status_delivery = 'received';
             $order->save();

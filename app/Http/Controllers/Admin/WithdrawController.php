@@ -167,7 +167,7 @@ class WithdrawController extends Controller
 
         $withdraw = Withdraw::find($id);
         $accounts = Account::select('*')
-            ->where('accounts_group_id', 1)
+            ->where('code', '10006')
             ->get();
 
         return view('admin.withdraw.approved', compact('withdraw','accounts'));

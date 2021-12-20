@@ -547,16 +547,24 @@ class CustomersApiController extends Controller
             ], 401);
         }
 
+        //if sponsor is set
+        $sponsor_id=$request->ref_id;
+        if(isset($request->sponsor_id) && $request->sponsor_id>0){
+            $sponsor_id=$request->sponsor_id;
+        }
+
         /* point balance */
         //get point referal
         $points_id = 1;
         $points_upg_id = 2;
         $points_fee_id = 4;
-        $points_debit = OrderPoint::where('customers_id', '=', $request->ref_id)
+        $points_debit = OrderPoint::where('customers_id', '=', $sponsor_id)
             ->where('type', '=', 'D')
+            ->where('status', '=', 'onhand')
             ->sum('amount');
-        $points_credit = OrderPoint::where('customers_id', '=', $request->ref_id)
+        $points_credit = OrderPoint::where('customers_id', '=', $sponsor_id)
             ->where('type', '=', 'C')
+            ->where('status', '=', 'onhand')
             ->sum('amount');
         $points_balance = $points_debit - $points_credit;
 
@@ -713,7 +721,7 @@ class CustomersApiController extends Controller
             $warehouses_id = 1;
             $last_code = $this->get_last_code('order-agent');
             $order_code = acc_code_generate($last_code, 8, 3);
-            $data = array('memo' => $memo, 'total' => $total, 'type' => 'activation_member', 'status' => 'pending', 'ledgers_id' => $ledger_id, 'customers_id' => $request->input('ref_id'), 'agents_id' => $request->input('agents_id'), 'payment_type' => 'point', 'code' => $order_code, 'register' => $register, 'bv_activation_amount' => $bv_nett, 'customers_activation_id' => $member->id);
+            $data = array('memo' => $memo, 'total' => $total, 'type' => 'activation_member', 'status' => 'pending', 'ledgers_id' => $ledger_id, 'customers_id' => $sponsor_id, 'agents_id' => $request->input('agents_id'), 'payment_type' => 'point', 'code' => $order_code, 'register' => $register, 'bv_activation_amount' => $bv_nett, 'customers_activation_id' => $member->id);
             $order = Order::create($data);
             //set order products
             $order->products()->attach($request->input('package_id'), ['quantity' => 1, 'price' => $total, 'cogs' => $cogs_total]);
@@ -734,7 +742,7 @@ class CustomersApiController extends Controller
             $activation_at = date('Y-m-d H:i:s');
             $member->parent_id = $parent_id;
             $member->activation_at = $activation_at;
-            $member->status = 'active';
+            // $member->status = 'active';
             $member->activation_type_id = $package_activation_type_id;
             $member->save();
             /*set order*/
@@ -779,7 +787,7 @@ class CustomersApiController extends Controller
 
             //set trf points from member to Usadha Bhakti (pending points)
             $order->points()->attach($points_id, ['amount' => $total, 'type' => 'D', 'status' => 'onhand', 'memo' => 'Penambahan Poin dari (Pending Order) ' . $memo, 'customers_id' => $com_id]);
-            $order->points()->attach($points_id, ['amount' => $total, 'type' => 'C', 'status' => 'onhand', 'memo' => 'Pemotongan Poin dari ' . $memo, 'customers_id' => $referal_id]);
+            $order->points()->attach($points_id, ['amount' => $total, 'type' => 'C', 'status' => 'onhand', 'memo' => 'Pemotongan Poin dari ' . $memo, 'customers_id' => $sponsor_id]);
 
             //set trf points cashback agent
             $order->points()->attach($points_id, ['amount' => $cba2, 'type' => 'D', 'status' => 'onhold', 'memo' => 'Penambahan Poin (Cashback Agen 02) dari ' . $memo, 'customers_id' => $agents_id]);
@@ -1435,7 +1443,7 @@ class CustomersApiController extends Controller
                 $activation_at = date('Y-m-d H:i:s');
                 $member->parent_id = $parent_id;
                 $member->activation_at = $activation_at;
-                $member->status = 'active';
+                // $member->status = 'active';
                 $member->activation_type_id = $package_activation_type_id;
                 $member->save();
                 /*set order*/
