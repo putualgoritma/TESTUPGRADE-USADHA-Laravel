@@ -1,6 +1,5 @@
 <div class="sidebar">
-    <nav class="sidebar-nav ps ps--active-y">
-
+    <nav class="sidebar-nav">
         <ul class="nav">
             <li class="nav-item">
                 <a href="{{ route("admin.home") }}" class="nav-link">
@@ -58,7 +57,50 @@
                         </i>
                         {{ trans('global.package.title') }}
                     </a>
-                </li>                
+                </li>  
+                {{-- <li class="nav-item">
+                    <a href="{{ route("admin.manufacture.index") }}" class="nav-link {{ request()->is('admin/manufacture') || request()->is('admin/manufacture/*') ? 'active' : '' }}">
+                        <i class="fas fa-building nav-icon">
+                        </i>
+                        {{ trans('global.manufacture.title') }}
+                    </a>
+                </li>                 --}}
+                </ul>
+            </li>
+
+
+            <li class="nav-item nav-dropdown">
+                <a class="nav-link  nav-dropdown-toggle">
+                    <i class="fas fa-shopping-cart nav-icon">
+
+                    </i>
+                Produksi
+                </a>
+                <ul class="nav-dropdown-items">                
+                    <li class="nav-item">
+                        <a href="{{ route("admin.manufacture.index") }}" class="nav-link {{ request()->is('admin/manufacture') || request()->is('admin/manufacture/*') ? 'active' : '' }}">
+                            <i class="fas fa-building nav-icon">
+                            </i>
+                            {{ trans('global.manufacture.title') }}
+                        </a>
+                    </li>    
+                    <li class="nav-item">
+                        <a href="{{ route("admin.permintaan-produksi.index") }}" class="nav-link {{ request()->is('admin/permintaan-produksi') || request()->is('admin/permintaan-produksi/*') ? 'active' : '' }}">
+                            <i class="fas fa-edit nav-icon">
+    
+                            </i>
+                            Permintaan Produksi
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ route("admin.material.index") }}" class="nav-link {{ request()->is('admin/material') || request()->is('admin/material/*') ? 'active' : '' }}">
+                            <i class="fas fa-cart-plus nav-icon">
+    
+                            </i>
+                            Pembelian Bahan
+                        </a>
+                    </li>
+
                 </ul>
             </li>
 

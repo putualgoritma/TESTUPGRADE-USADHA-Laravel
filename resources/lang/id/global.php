@@ -372,6 +372,7 @@ return [
             'updated_at_helper' => '',
             'deleted_at' => 'Deleted at',
             'deleted_at_helper' => '',
+            'model' =>'Model'
         ],
     ],
     'account' => [
@@ -555,6 +556,16 @@ return [
             'deleted_at_helper' => '',
         ],
     ],
+    'manufacture' =>[
+        'title' => 'Manufacture',
+        'fields' => [
+            'id' => 'ID',
+            'product_id' => 'Product',
+            'manufacture_id' => 'Manufacture',
+            'quantity' => 'Jumlah',
+        ]
+    ],
+
     'customer' => [
         'title' => 'Pelanggan',
         'title_singular' => 'Pelanggan',

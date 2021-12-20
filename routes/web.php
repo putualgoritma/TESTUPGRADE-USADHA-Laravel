@@ -153,6 +153,15 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Admin', 'mi
 
     //order package
     Route::resource('order-package', 'OrderPackagesController');   
+    
+    //Manufacture
+    Route::resource('manufacture', 'ManufactureController');   
+    
+    //Permintaan Produksi
+    Route::resource('permintaan-produksi', 'PermintaanProduksiController');
+
+    //Material
+    Route::resource('material', 'MaterialController');
 
 });
 
