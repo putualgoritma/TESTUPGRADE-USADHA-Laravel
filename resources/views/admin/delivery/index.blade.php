@@ -3,15 +3,15 @@
 @can('order_create')
     <div style="margin-bottom: 10px;" class="row">
         <div class="col-lg-12">
-            <a class="btn btn-success" href="{{ route("admin.material.create") }}">
-                {{ trans('global.add') }} Bahan Baku
+        <a class="btn btn-success" href="{{ route("admin.delivery.continue") }}">
+                {{ trans('global.add') }} Penyerahan
             </a>
         </div>
     </div>
 @endcan
 <div class="card">
     <div class="card-header">
-        Bahan Baku {{ trans('global.list') }}
+        Penyerahan Produksi {{ trans('global.list') }}
     </div>
 
     <div class="card-body">
@@ -78,7 +78,7 @@
                 </div>
             </form>
             <div class="table-responsive">
-                <table class=" table table-bordered table-striped table-hover datatable datatable-Material ajaxTable datatable-materials"">
+                <table class=" table table-bordered table-striped table-hover datatable datatable-Order ajaxTable datatable-orders"">
                     <thead>
                         <tr>
                             <th width="10">
@@ -155,11 +155,11 @@
     }
   
   let dtButtons = $.extend(true, [], $.fn.dataTable.defaults.buttons)
-
+@can('order_delete')
   let deleteButtonTrans = '{{ trans('global.datatables.delete') }}'
   let deleteButton = {
     text: deleteButtonTrans,
-    url: "{{ route('admin.material.massDestroy') }}",
+    url: "{{ route('admin.orders.massDestroy') }}",
     className: 'btn-danger',
     action: function (e, dt, node, config) {
       var ids = $.map(dt.rows({ selected: true }).nodes(), function (entry) {
@@ -182,15 +182,14 @@
       }
     }
   }
-
-  
+  dtButtons.push(deleteButton)
+@endcan
 
   $.extend(true, $.fn.dataTable.defaults, {
     order: [[ 1, 'desc' ]],
     pageLength: 100,
   });
-  dtButtons.push(deleteButton)
-  $('.datatable-Material:not(.ajaxTable)').DataTable({ buttons: dtButtons })
+  $('.datatable-Order:not(.ajaxTable)').DataTable({ buttons: dtButtons })
 
   let dtOverrideGlobals = {
     buttons: dtButtons,
@@ -199,7 +198,7 @@
     retrieve: true,
     aaSorting: [],
     ajax: {
-      url: "{{ route('admin.material.index') }}",
+      url: "{{ route('admin.permintaan-produksi.index') }}",
       dataType: "json",
       headers: {'x-csrf-token': _token},
       method: 'GET',
@@ -251,7 +250,7 @@
         },
   };
 
-  $('.datatable-materials').DataTable(dtOverrideGlobals);
+  $('.datatable-orders').DataTable(dtOverrideGlobals);
     $('a[data-toggle="tab"]').on('shown.bs.tab', function(e){
         $($.fn.dataTable.tables(true)).DataTable()
             .columns.adjust();

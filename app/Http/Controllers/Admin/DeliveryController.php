@@ -18,9 +18,8 @@ use Gate;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Yajra\DataTables\Facades\DataTables;
-use App\Http\Requests\MassDestroyOrderRequest;
 
-class MaterialController extends Controller
+class DeliveryController extends Controller
 {
     use TraitModel;
     private $onesignal_client;
@@ -88,7 +87,7 @@ class MaterialController extends Controller
         $query = Order::with('products')
         ->with('customers')
         ->with('accounts')
-        ->where('type','production_request')
+        ->where('type','material_out')
         ->FilterCustomer()
         // ->FilterRangeDate(null, $from, $to)
         ->whereBetween('register', [$from, $to])
@@ -101,7 +100,7 @@ class MaterialController extends Controller
             $query = Order::with('products')
                 ->with('customers')
                 ->with('accounts')
-                ->where('type','buy')
+                ->where('type','material_out')
                 ->FilterCustomer()
                 // ->FilterRangeDate(null, $from, $to)
                 ->whereBetween('register', [$from, $to])
@@ -116,7 +115,7 @@ class MaterialController extends Controller
                 // $viewGate = 'order_show';
                 $editGate = 'order_edit';
                 $deleteGate = 'order_delete';
-                $crudRoutePart = 'material';
+                $crudRoutePart = 'permintaan-produksi';
 
                 return view('partials.datatablesPermintaan', compact(
                     // 'viewGate',
@@ -185,7 +184,7 @@ class MaterialController extends Controller
         $orders = Order::with('products')
             ->with('customers')
             ->with('accounts')
-            ->where('type','buy');
+            ->where('type','material_out');
 
         $customers = Customer::select('*')
             ->where(function ($query) {
@@ -197,12 +196,52 @@ class MaterialController extends Controller
 
         //return $orders;
 
-        return view('admin.material.index', compact('orders', 'customers'));
+        return view('admin.delivery.index', compact('orders', 'customers'));
     }
+
+    public function continue(){
+        $products = Product::all();
+        $orderan =  Order::where('type','production_request')->get();
+        $customers = Customer::select('*')
+            ->where('def', '=', '0')
+            ->where('type', '=', 'agent')
+            ->get();
+        $accounts = Account::select('*')
+            ->where('accounts_group_id', 1)
+            ->get();
+
+        $last_code = $this->ord_get_last_code();
+        $code = acc_code_generate($last_code, 8, 3);
+        // return $orderan;
+        return view('admin.delivery.continue', compact('products', 'customers', 'accounts', 'code','orderan'));
+    }
+
+    public function next( StoreOrderRequest $request){
+        $data = $request;
+        $orderproduct = [];
+        for($i = 0; $i < count($request->orderan); $i++){
+            $orderproduct[$i]  = Order::where('id',$request->orderan[$i])->with('products')->get(); 
+        }
+        
+        $test = [];
+        foreach($orderproduct as $key => $value){
+            $test[]=$value[0]->products[0];
+        }
+        $manufacture=[];
+        foreach($test as $tes){
+            $manufacture[]  = Product::with('manufacture')->where('id',$tes->id)->get();
+        
+        }
+     
+      
+        return $manufacture;
+        // return view('admin.delivery.next', compact('data'));
+    }
+
 
     public function create()
     {
-        abort_if(Gate::denies('order_create'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+        // abort_if(Gate::denies('order_create'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
         $products = Product::all();
         $customers = Customer::select('*')
@@ -216,8 +255,11 @@ class MaterialController extends Controller
         $last_code = $this->ord_get_last_code();
         $code = acc_code_generate($last_code, 8, 3);
 
-        return view('admin.material.create', compact('products', 'customers', 'accounts', 'code'));
+        return view('admin.permintaan.create', compact('products', 'customers', 'accounts', 'code'));
     }
+
+  
+
 
     public function store(StoreOrderRequest $request)
     {
@@ -306,7 +348,7 @@ class MaterialController extends Controller
         $customers_id = $request->input('customers_id');
         $warehouses_id = 1;
         //set order
-        $data = array_merge($request->all(), ['total' => $total, 'type' => 'buy', 'status' => 'approved', 'ledgers_id' => $ledger_id, 'customers_id' => $customers_id, 'payment_type' => 'cash']);
+        $data = array_merge($request->all(), ['total' => $total, 'type' => 'material_out', 'status' => 'approved', 'ledgers_id' => $ledger_id, 'customers_id' => $customers_id, 'payment_type' => 'cash']);
         $order = Order::create($data);
         //set order products
         for ($product = 0; $product < count($products); $product++) {
@@ -339,7 +381,7 @@ class MaterialController extends Controller
                 }
             }
         }
-        return redirect()->route('admin.material.index');
+        return redirect()->route('admin.permintaan-produksi.index');
     }
 
     public function edit(Order $order,$id)
@@ -358,7 +400,7 @@ class MaterialController extends Controller
         $order->load('products');
 
         // return $order;
-        return view('admin.material.edit', compact('products', 'order','customers','accounts'));
+        return view('admin.permintaan.edit', compact('products', 'order','customers','accounts'));
         // return redirect()->route('admin.permintaan-produksi.index');
     }
 
@@ -463,7 +505,7 @@ class MaterialController extends Controller
         // $data = array_merge($request->all(), ['total' => $total, 'type' => 'production_request', 'status' => 'approved', 'ledgers_id' => $ledger_id, 'customers_id' => $customers_id, 'payment_type' => 'cash']);
         
         $order->total = $total;
-        $order->type='buy';
+        $order->type='material_out';
         $order->status='approved';
         $order->memo=$memo;
         $order->code=$code;
@@ -507,7 +549,7 @@ class MaterialController extends Controller
                 }
             }
         }
-        return redirect()->route('admin.material.index');
+        return redirect()->route('admin.permintaan-produksi.index');
     }
 
     public function show(Order $order)
@@ -538,15 +580,12 @@ class MaterialController extends Controller
         return back();
         //return Redirect()->Route('admin.orders.index');
     }
-  
 
-    public function massDestroy(MassDestroyOrderRequest $request)
+    public function massDestroy(Request $request)
     {
+        Order::whereIn('id', request('ids'))->delete();
 
-          $test = Order::whereIn('id', request('ids'))->delete();
-        return $test;
-        // Order::whereIn('id', request('ids'))->delete();
-        
-        // return response(null, 204);
+        return response(null, Response::HTTP_NO_CONTENT);
+        //return Redirect()->Route('admin.orders.index');
     }
 }
