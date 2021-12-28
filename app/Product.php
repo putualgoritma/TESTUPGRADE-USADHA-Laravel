@@ -43,4 +43,12 @@ class Product extends Model
         ->select('quantity')
         ->groupBy('products_id');
     }
+    public function manufacture()
+    {
+        return $this->belongsToMany(Product::class, 'product_manufacture','good_id', 'product_id')
+        ->withPivot([
+            'quantity',
+            ])
+        ->select(['product_manufacture.product_id']);
+    }
 }

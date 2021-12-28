@@ -155,13 +155,21 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Admin', 'mi
     Route::resource('order-package', 'OrderPackagesController');   
     
     //Manufacture
-    Route::resource('manufacture', 'ManufactureController');   
+    Route::resource('manufacture', 'ManufactureController');
+    Route::delete('manufacture/destroy', 'ManufactureController@massDestroy')->name('manufacture.massDestroy');
     
     //Permintaan Produksi
     Route::resource('permintaan-produksi', 'PermintaanProduksiController');
+    Route::delete('permintaan-produksi/destroy', 'PermintaanProduksi@massDestroy')->name('permintaan-produksi.massDestroy');
 
     //Material
     Route::resource('material', 'MaterialController');
+    Route::delete('material/destroy', 'MaterialController@massDestroy')->name('material.massDestroy');
+
+    //Delivery
+    Route::resource('delivery', 'DeliveryController');
+    Route::get('continue','DeliveryController@continue')->name('delivery.continue');
+    Route::post('next','DeliveryController@next')->name('delivery.next');
 
 });
 

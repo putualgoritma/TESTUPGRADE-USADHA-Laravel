@@ -3,11 +3,11 @@
 
 <div class="card">
     <div class="card-header">
-        {{ trans('global.create') }} Bahan Baku
+        {{ trans('global.create') }} Penyerahan Proses
     </div>
 
     <div class="card-body">
-        <form action="{{ route("admin.material.store") }}" method="POST" enctype="multipart/form-data">
+        <form action="{{ route("admin.delivery.next") }}" method="POST" enctype="multipart/form-data">
             @csrf
             <div class="form-group {{ $errors->has('register') ? 'has-error' : '' }}">
                 <label for="register">{{ trans('global.order.fields.register') }}*</label>
@@ -87,34 +87,34 @@
 
             <div class="card">
                 <div class="card-header">
-                    Products
+                Permintaan List
                 </div>
 
                 <div class="card-body">
                     <table class="table" id="products_table">
                         <thead>
                             <tr>
-                                <th>Product</th>
-                                <th>Quantity</th>
+                                <th>Permintaan</th>
+                                <!-- <th>Quantity</th>
                                 <th>Price</th>
-                                <th>Sub Total</th>
+                                <th>Sub Total</th> -->
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach (old('products', ['']) as $index => $oldProduct)
+                            @foreach (old('orderan', ['']) as $index => $oldorder)
                                 <tr id="product{{ $index }}">
                                     <td>
-                                        <select name="products[]" class="form-control product_list">
-                                            <option value="">-- choose product --</option>
-                                            @foreach ($products as $product)
-                                                <option data-cogs="{{ $product->cogs }}" data-price="{{ $product->price }}" value="{{ $product->id }}"{{ $oldProduct == $product->id ? ' selected' : '' }}>
-                                                    {{ $product->name }} (Rp. {{ number_format($product->price, 2) }})
+                                        <select name="orderan[]" class="form-control product_list">
+                                            <option value="">-- Pilih Permintaan --</option>
+                                            @foreach ($orderan as $order)
+                                                <option  value="{{ $order->id }}"{{ $oldorder == $order->id ? ' selected' : '' }}>
+                                                    {{ $order->id }}
                                                 </option>
                                             @endforeach
                                         </select>
-                                        <input type="hidden" name="cogs[]" value="{{ old('cogs.' . $index) ?? '0' }}" class="cogs_hidden">
+                                        <!-- <input type="hidden" name="cogs[]" value="{{ old('cogs.' . $index) ?? '0' }}" class="cogs_hidden"> -->
                                     </td>
-                                    <td>
+                                    <!-- <td>
                                         <input type="number" name="quantities[]" class="form-control qty_list" value="{{ old('quantities.' . $index) ?? '1' }}" />
                                     </td>
                                     <td>
@@ -122,12 +122,12 @@
                                     </td>
                                     <td>
                                     <input type="number" name="subs[]" class="form-control sub_list" value="{{ old('subs.' . $index) ?? '0' }}" readonly />
-                                    </td>
+                                    </td> -->
                                 </tr>
                             @endforeach
-                            <tr id="product{{ count(old('products', [''])) }}"></tr>
+                            <tr id="product{{ count(old('orderan', [''])) }}"></tr>
                         </tbody>
-                        <tr>
+                        <!-- <tr>
                                     <td>
                                     </td>
                                     <td>
@@ -138,7 +138,7 @@
                                     <td>
                                     <input type="number" name="total" class="form-control" value="{{ old('total') ?? '0' }}" readonly />
                                     </td>
-                                </tr>
+                                </tr> -->
                     </table>
 
                     <div class="row">
@@ -150,7 +150,7 @@
                 </div>
             </div>
             <div>
-                <input class="btn btn-danger" type="submit" value="{{ trans('global.save') }}">
+                <input class="btn btn-danger" type="submit" value="Teruskan">
             </div>
         </form>
 

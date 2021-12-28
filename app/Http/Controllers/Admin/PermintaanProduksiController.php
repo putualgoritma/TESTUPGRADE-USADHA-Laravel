@@ -371,6 +371,9 @@ class PermintaanProduksiController extends Controller
         $quantities = $request->input('quantities', []);
         $prices = $request->input('prices', []);
         $cogs = $request->input('cogs', []);
+        $memo = $request->input('memo');
+        $code = $request->input('code');
+        $register = $request->input('register');
         for ($product = 0; $product < count($products); $product++) {
             $total += $quantities[$product] * $prices[$product];
             $cogs_total += $quantities[$product] * $cogs[$product];
@@ -461,7 +464,9 @@ class PermintaanProduksiController extends Controller
         $order->total = $total;
         $order->type='production_request';
         $order->status='approved';
-
+        $order->memo=$memo;
+        $order->code=$code;
+        $order->register=$register;
         $order->ledgers_id=$ledger_id;
         $order->customers_id=$customers_id;
         $order->payment_type='cash';

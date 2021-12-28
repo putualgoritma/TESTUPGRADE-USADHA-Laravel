@@ -100,7 +100,13 @@
                             Pembelian Bahan
                         </a>
                     </li>
-
+                    <li class="nav-item">
+                        <a href="{{ route("admin.delivery.index") }}" class="nav-link {{ request()->is('admin/delivery') || request()->is('admin/delivery/*') ? 'active' : '' }}">
+                            <i class="fas fa-cart-plus nav-icon">
+                            </i>
+                            Penyerahan Bahan
+                        </a>
+                    </li>
                 </ul>
             </li>
 

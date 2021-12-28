@@ -153,6 +153,13 @@ class ManufactureController extends Controller
         return back();
     }
 
+     public function massDestroy(MassDestroyProductRequest $request)
+    {
+        Product::whereIn('id', request('ids'))->delete();
+
+        return response(null, 204);
+    }
+
 
 }
 ?>
